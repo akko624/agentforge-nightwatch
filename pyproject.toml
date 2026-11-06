@@ -1,0 +1,42 @@
+[build-system]
+requires = ["setuptools>=75"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "sqsp"
+version = "0.1.0"
+description = "Skill Quality and Security Platform"
+requires-python = ">=3.12"
+dependencies = [
+  "fastapi==0.162.0",
+  "starlette==1.10.0",
+  "uvicorn==0.54.0",
+  "pydantic==2.14.2",
+  "pydantic-settings==2.16.2",
+  "sqlalchemy==2.1.6",
+  "alembic==1.20.1",
+  "psycopg[binary]==3.3.7",
+  "redis==8.1.0",
+  "rq==3.0.0",
+  "python-multipart==0.0.33",
+  "PyYAML==6.0.3",
+  "jsonschema==4.26.0",
+]
+
+[project.optional-dependencies]
+dev = ["pytest==9.1.1", "pytest-cov==6.1.1", "httpx==0.28.1", "ruff==0.11.8", "pip-audit==2.10.1"]
+
+[tool.setuptools.packages.find]
+include = ["backend*", "worker*"]
+
+[tool.pytest.ini_options]
+testpaths = ["backend/tests"]
+pythonpath = ["."]
+
+[tool.ruff]
+line-length = 110
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+ignore = ["E501", "B008"]

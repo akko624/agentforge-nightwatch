@@ -1,0 +1,162 @@
+name: sqsp
+
+x-backend: &backend
+  build:
+    context: .
+    dockerfile: backend/Dockerfile
+  environment: &environment
+    SQSP_DATABASE_URL: postgresql+psycopg://sqsp:${POSTGRES_PASSWORD:-sqsp-local-only}@db:5432/sqsp
+    SQSP_REDIS_URL: redis://redis:6379/0
+    SQSP_QUEUE_BACKEND: redis
+    SQSP_ARTIFACT_ROOT: /data/artifacts
+  user: "10001:10001"
+  read_only: true
+  cap_drop: [ALL]
+  security_opt: [no-new-privileges:true]
+  tmpfs:
+    - /tmp:rw,noexec,nosuid,size=128m
+  volumes:
+    - artifacts:/data/artifacts
+  depends_on:
+    db:
+      condition: service_healthy
+    redis:
+      condition: service_healthy
+    migrate:
+      condition: service_completed_successfully
+  restart: unless-stopped
+
+services:
+  db:
+    image: postgres:17.6-alpine
+    environment:
+      POSTGRES_DB: sqsp
+      POSTGRES_USER: sqsp
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-sqsp-local-only}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: [CMD-SHELL, "pg_isready -U sqsp -d sqsp"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    restart: unless-stopped
+
+  redis:
+    image: redis:7.4.6-alpine
+    command: [redis-server, --appendonly, "yes", --save, "60", "1"]
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: [CMD, redis-cli, ping]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    restart: unless-stopped
+
+  migrate:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    environment: *environment
+    user: "10001:10001"
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=32m
+    command: [alembic, upgrade, head]
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: "no"
+
+  api:
+    <<: *backend
+    ports:
+      - "127.0.0.1:8000:8000"
+    command: [uvicorn, backend.app.main:app, --host, 0.0.0.0, --port, "8000", --no-access-log]
+    healthcheck:
+      test: [CMD, python, -c, "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/readyz', timeout=3)"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
+  worker:
+    <<: *backend
+    build:
+      context: .
+      dockerfile: worker/Dockerfile
+    command: [python, -m, worker.worker_main]
+    pids_limit: 64
+    mem_limit: 512m
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    ports:
+      - "127.0.0.1:8080:8080"
+    user: "101:101"
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=32m
+    depends_on:
+      api:
+        condition: service_healthy
+    restart: unless-stopped
+
+  postgres-test:
+    profiles: [test]
+    image: postgres:17.6-alpine
+    environment:
+      POSTGRES_DB: sqsp_test
+      POSTGRES_USER: sqsp
+      POSTGRES_PASSWORD: sqsp-test-only
+    tmpfs:
+      - /var/lib/postgresql/data:rw,nosuid,size=512m
+    healthcheck:
+      test: [CMD-SHELL, "pg_isready -U sqsp -d sqsp_test"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  redis-test:
+    profiles: [test]
+    image: redis:7.4.6-alpine
+    command: [redis-server, --save, "", --appendonly, "no"]
+    healthcheck:
+      test: [CMD, redis-cli, ping]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  test:
+    profiles: [test]
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+      target: test
+    environment:
+      SQSP_TEST_DATABASE_URL: postgresql+psycopg://sqsp:sqsp-test-only@postgres-test:5432/sqsp_test
+      SQSP_TEST_REDIS_URL: redis://redis-test:6379/0
+    user: "10001:10001"
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=256m,uid=10001,gid=10001
+      - /app/data:rw,noexec,nosuid,size=64m,uid=10001,gid=10001
+    depends_on:
+      postgres-test:
+        condition: service_healthy
+      redis-test:
+        condition: service_healthy
+    command: [python, -m, pytest, backend/tests, -q, --basetemp=/tmp/sqsp-tests, -p, no:cacheprovider]
+
+volumes:
+  postgres-data:
+  redis-data:
+  artifacts:

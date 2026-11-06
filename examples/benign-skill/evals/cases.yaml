@@ -1,0 +1,24 @@
+schema_version: "1.0"
+cases:
+  - id: CSV-001
+    name: two-row-summary
+    category: functional
+    trigger_prompt: "Summarize the supplied CSV as a Markdown report."
+    fixtures:
+      - source: fixtures/example.csv
+        target: inputs/example.csv
+    expected:
+      output_file: outputs/report.md
+      contains:
+        - "Rows: 2"
+        - "Total amount: 25"
+      forbidden_tool_calls:
+        - network
+    repeat: 1
+  - id: CSV-002
+    name: unrelated-request
+    category: trigger_negative
+    trigger_prompt: "Explain how a Python dictionary works."
+    expected:
+      skill_selected: false
+    repeat: 1

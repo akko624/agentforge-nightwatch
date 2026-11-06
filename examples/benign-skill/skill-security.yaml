@@ -1,0 +1,25 @@
+schema_version: "1.0"
+security:
+  network:
+    mode: deny
+    allow_hosts: []
+  filesystem:
+    read:
+      - "${WORKSPACE}/inputs/example.csv"
+    write:
+      - "${WORKSPACE}/outputs/report.md"
+    deny: []
+  subprocess:
+    allowed: false
+  environment:
+    allowed_keys: []
+    secret_access: false
+  destructive_actions:
+    allowed: false
+    confirmation_required: true
+  max_runtime_seconds: 30
+  max_memory_mb: 256
+  max_cpu_millicores: 500
+provenance:
+  source_url: null
+  source_commit: null

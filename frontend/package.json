@@ -1,0 +1,33 @@
+{
+  "name": "sqsp-web",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 0.0.0.0",
+    "build": "tsc -b && vite build",
+    "build:report": "tsc -b && vite build --config vite.report.config.ts",
+    "test": "vitest run",
+    "generate:api": "python ../scripts/generate_api_types.py",
+    "preview": "vite preview --host 0.0.0.0"
+  },
+  "dependencies": {
+    "@ant-design/icons": "5.6.1",
+    "@tanstack/react-query": "5.62.11",
+    "antd": "5.22.6",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "react-router-dom": "7.18.5"
+  },
+  "devDependencies": {
+    "@testing-library/jest-dom": "6.6.3",
+    "@testing-library/react": "16.1.0",
+    "@types/react": "18.3.12",
+    "@types/react-dom": "18.3.1",
+    "@vitejs/plugin-react": "6.2.1",
+    "jsdom": "25.0.1",
+    "typescript": "5.7.2",
+    "vite": "8.3.5",
+    "vitest": "5.1.0"
+  }
+}

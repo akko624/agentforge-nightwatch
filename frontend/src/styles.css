@@ -1,0 +1,49 @@
+:root { color: #1c3028; background: #f5f6f1; font-family: Inter, 'Segoe UI', 'Microsoft YaHei', sans-serif; font-synthesis: none; }
+body { margin: 0; }
+* { box-sizing: border-box; }
+.topbar { min-height: 76px; background: #15261f; color: #fff; display: flex; justify-content: space-between; align-items: center; padding: 16px 36px; gap: 16px; }
+.topbar strong { font-size: 24px; letter-spacing: 2px; }
+.brand-icon { font-size: 28px; color: #9ad4b5; }
+.brand-description { font-size: 13px; color: #bbcbc3; }
+main { max-width: 1240px; padding: 42px 32px; margin: auto; }
+.eyebrow { color: #44705c; font-size: 11px; letter-spacing: 2px; font-weight: 600; }
+.brand { display: flex; align-items: center; gap: 12px; color: white; }
+.brand:hover { color: white; }
+nav { display: flex; align-items: center; gap: 24px; margin-left: auto; margin-right: 16px; }
+nav a { color: #bacac1; font-size: 13px; padding: 10px 0; border-bottom: 2px solid transparent; }
+nav a.active, nav a:hover { color: #fff; border-bottom-color: #9ad4b5; }
+.page-heading { display: flex; align-items: center; justify-content: space-between; gap: 24px; margin-bottom: 26px; }
+.page-heading h1 { margin-top: 12px; margin-bottom: 12px; }
+.principle-grid { display: grid; grid-template-columns: repeat(3, 1fr); border: 1px solid #dfe5dc; background: #edf1e8; border-radius: 8px; }
+.principle-grid > div { padding: 20px 24px; }
+.principle-grid > div + div { border-left: 1px solid #d8dfd4; }
+.principle-grid strong, .principle-grid span { display: block; }
+.principle-grid strong { font-size: 14px; margin-bottom: 7px; }
+.principle-grid span { color: #647369; font-size: 12px; }
+.section-gap { margin-top: 24px; margin-bottom: 24px; }
+.filter-bar { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; margin-bottom: 20px; }
+.skill-link { font-weight: 600; font-size: 14px; }
+.muted, .metric-note { color: #727e76; }
+.metric-note { font-size: 12px; margin-top: 12px; line-height: 1.6; }
+.metric-label { margin-bottom: 16px; color: #727e76; font-size: 14px; }
+.metric-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
+.quality-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin-top: 20px; margin-bottom: 20px; }
+.upload-grid { display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(280px, 1fr); gap: 24px; }
+.field-label { display: block; font-size: 13px; font-weight: 600; margin-top: 22px; margin-bottom: 9px; }
+.submit-button { margin-top: 24px; }
+.guidance-list { padding-left: 20px; line-height: 1.9; color: #59675e; }
+.guidance-list li { margin-bottom: 12px; }
+.back-link { display: block; font-size: 12px; margin-bottom: 24px; }
+.hash { overflow-wrap: anywhere; word-break: break-all; font-size: 11px; }
+code { font-family: 'Cascadia Code', Consolas, monospace; font-size: 12px; }
+.finding-detail { padding: 10px 16px; }
+.evidence { white-space: pre-wrap; overflow-wrap: anywhere; word-break: break-word; background: #eff2ed; border: 1px solid #dde4d9; padding: 16px; border-radius: 6px; line-height: 1.7; font-size: 12px; max-height: 500px; overflow-y: auto; }
+.comparison-head { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
+.compare-select { display: grid; grid-template-columns: minmax(0, 1fr) 24px minmax(0, 1fr) auto; gap: 18px; align-items: end; }
+.compare-select .field-label { margin-top: 0; }
+.compare-arrow { margin-bottom: 12px; color: #69806c; }
+.footer { border-top: 1px solid #dfe5dc; padding-top: 22px; margin-top: 44px; color: #7a857e; font-size: 11px; line-height: 1.8; }
+.loading-panel { padding: 80px 20px; text-align: center; }
+details summary { cursor: pointer; color: #176b50; font-size: 13px; }
+@media(max-width: 900px) { .topbar { flex-wrap: wrap; } .brand-description { display: none; } nav { margin: 0; } .metric-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .page-heading { align-items: start; flex-direction: column; } .upload-grid { grid-template-columns: 1fr; } .compare-select { grid-template-columns: 1fr; } .compare-arrow { display: none; } }
+@media(max-width: 620px) { .topbar { padding: 16px; gap: 14px; } nav { order: 3; width: 100%; } main { padding: 28px 16px; } .principle-grid, .quality-grid, .comparison-head { grid-template-columns: 1fr; } .principle-grid > div + div { border-left: none; border-top: 1px solid #d8dfd4; } .metric-grid { gap: 8px; } .metric-grid .ant-statistic-content { font-size: 20px; } .ant-card .ant-card-body { padding: 16px; } h1.ant-typography { font-size: 28px; } }

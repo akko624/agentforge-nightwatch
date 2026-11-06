@@ -1,0 +1,8 @@
+version: "1.0"
+required_stages: [schema, static, quality]
+require_full_quality: false
+approved_permissions:
+  network: deny
+  subprocess: false
+  secret_access: false
+  destructive_actions: false

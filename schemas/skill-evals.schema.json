@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object", "additionalProperties": false, "required": ["schema_version", "cases"],
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "cases": {"type": "array", "maxItems": 100, "items": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "name", "category", "trigger_prompt", "expected"],
+      "properties": {
+        "id": {"type": "string", "minLength": 1, "maxLength": 64},
+        "name": {"type": "string", "minLength": 1, "maxLength": 128},
+        "category": {"enum": ["functional", "trigger_positive", "trigger_negative", "security", "reliability"]},
+        "trigger_prompt": {"type": "string", "minLength": 1, "maxLength": 4096},
+        "repeat": {"type": "integer", "minimum": 1, "maximum": 10},
+        "fixtures": {"type": "array", "maxItems": 30, "items": {"type": "object", "additionalProperties": false, "required": ["source", "target"], "properties": {"source": {"type": "string", "maxLength": 512}, "target": {"type": "string", "maxLength": 512}}}},
+        "expected": {"type": "object", "additionalProperties": false, "properties": {
+          "output_file": {"type": "string", "maxLength": 512}, "skill_selected": {"type": "boolean"},
+          "contains": {"type": "array", "maxItems": 50, "items": {"type": "string", "maxLength": 1024}},
+          "forbidden_tool_calls": {"type": "array", "maxItems": 50, "items": {"type": "string", "maxLength": 128}}
+        }}
+      }
+    }}
+  }
+}

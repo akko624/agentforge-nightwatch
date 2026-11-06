@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object", "additionalProperties": false,
+  "required": ["schema_version", "security"],
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "security": {
+      "type": "object", "additionalProperties": false,
+      "properties": {
+        "network": {"type": "object", "additionalProperties": false, "required": ["mode"], "properties": {
+          "mode": {"enum": ["deny", "allowlist"]}, "allow_hosts": {"type": "array", "maxItems": 50, "items": {"type": "string", "pattern": "^[a-zA-Z0-9.-]+$", "maxLength": 253}}
+        }},
+        "filesystem": {"type": "object", "additionalProperties": false, "properties": {
+          "read": {"$ref": "#/$defs/paths"}, "write": {"$ref": "#/$defs/paths"}, "deny": {"$ref": "#/$defs/paths"}
+        }},
+        "subprocess": {"$ref": "#/$defs/permission"},
+        "environment": {"type": "object", "additionalProperties": false, "properties": {
+          "allowed_keys": {"type": "array", "maxItems": 50, "items": {"type": "string", "pattern": "^[A-Z_][A-Z0-9_]*$"}}, "secret_access": {"type": "boolean"}
+        }},
+        "destructive_actions": {"type": "object", "additionalProperties": false, "properties": {"allowed": {"type": "boolean"}, "confirmation_required": {"type": "boolean"}}},
+        "max_runtime_seconds": {"type": "integer", "minimum": 1, "maximum": 300},
+        "max_memory_mb": {"type": "integer", "minimum": 16, "maximum": 4096},
+        "max_cpu_millicores": {"type": "integer", "minimum": 1, "maximum": 4000}
+      }
+    },
+    "provenance": {"type": "object", "additionalProperties": false, "properties": {"source_url": {"type": ["string", "null"], "maxLength": 2048}, "source_commit": {"type": ["string", "null"], "maxLength": 64}}}
+  },
+  "$defs": {
+    "permission": {"type": "object", "additionalProperties": false, "properties": {"allowed": {"type": "boolean"}}},
+    "paths": {"type": "array", "maxItems": 50, "items": {"type": "string", "maxLength": 512, "pattern": "^\\$\\{(WORKSPACE|HOME)\\}/(?!.*(?:\\.\\.|\\\\|\\$|:))[^\\u0000-\\u001f]+$"}}
+  }
+}

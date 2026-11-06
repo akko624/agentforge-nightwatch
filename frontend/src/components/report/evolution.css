@@ -1,0 +1,23 @@
+.evolution-workbench { padding: 4px 1px; }
+.evolution-head { display: flex; gap: 24px; align-items: flex-start; justify-content: space-between; margin-bottom: 20px; }
+.evolution-head h3 { margin: 8px 0 7px !important; }
+.evolution-head .ant-typography-secondary { max-width: 760px; margin-bottom: 0; line-height: 1.75; }
+.evolution-head > .ant-btn { flex: 0 0 auto; margin-top: 15px; }
+.evolution-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 16px; }
+.evolution-action { border-left: 3px solid #92a69a; box-shadow: none; }
+.evolution-action-p0 { border-left-color: #c75b55; background: linear-gradient(125deg, #fff 0%, #fffafa 100%); }
+.evolution-action-p1 { border-left-color: #bd974a; background: linear-gradient(125deg, #fff 0%, #fffdf7 100%); }
+.evolution-action-p2 { border-left-color: #4f8570; background: linear-gradient(125deg, #fff 0%, #f9fcfa 100%); }
+.evolution-action-top { min-height: 28px; }
+.evolution-action-icon { display: inline-flex; align-items: center; justify-content: center; width: 25px; height: 25px; border-radius: 7px; color: #356b55; background: #edf5ef; }
+.evolution-action h5 { margin: 9px 0 8px !important; font-size: 14px !important; }
+.evolution-action p { margin: 7px 0 0; color: #63736a; font-size: 12px; line-height: 1.75; }
+.evolution-action p strong { color: #3c5747; }
+.evolution-roadmap { display: grid; grid-template-columns: 210px 1fr; gap: 20px; margin-top: 18px; padding: 20px; border: 1px solid #d7e3d9; border-radius: 12px; background: linear-gradient(100deg, #eff6f0, #fbfdfb); }
+.evolution-roadmap span { color: #4c8066; font-size: 9px; letter-spacing: 1.3px; font-weight: 700; }
+.evolution-roadmap h4 { margin: 8px 0 0; color: #254836; font-size: 16px; }
+.evolution-roadmap-items { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 15px; }
+.evolution-roadmap-items p { margin: 0; color: #66796c; font-size: 11px; line-height: 1.75; }
+.evolution-roadmap-items strong { display: block; color: #365c45; margin: 6px 0 2px; font-size: 12px; }
+.evolution-roadmap-items .ant-tag { margin: 0; font-size: 9px; }
+@media(max-width: 760px) { .evolution-head { flex-direction: column; gap: 8px; } .evolution-head > .ant-btn { margin-top: 0; } .evolution-actions { grid-template-columns: 1fr; } .evolution-roadmap { grid-template-columns: 1fr; gap: 14px; } .evolution-roadmap-items { grid-template-columns: 1fr; gap: 12px; } }

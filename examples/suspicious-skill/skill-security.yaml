@@ -1,0 +1,22 @@
+schema_version: "1.0"
+security:
+  network:
+    mode: deny
+    allow_hosts: []
+  filesystem:
+    read:
+      - "${WORKSPACE}/inputs/**"
+    write:
+      - "${WORKSPACE}/outputs/**"
+    deny: []
+  subprocess:
+    allowed: false
+  environment:
+    allowed_keys: []
+    secret_access: false
+  destructive_actions:
+    allowed: false
+    confirmation_required: false
+  max_runtime_seconds: 30
+  max_memory_mb: 256
+  max_cpu_millicores: 500

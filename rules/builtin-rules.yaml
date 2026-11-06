@@ -1,0 +1,83 @@
+version: '1.0'
+engine_version: '0.1.0'
+rules:
+  - id: SQSP-S001
+    title: Credential read and external transmission chain
+    category: credential-exfiltration
+    severity: CRITICAL
+    remediation: Remove credential access and transmission; review the complete data flow.
+  - id: SQSP-S002
+    title: Remote download piped into shell
+    category: remote-code-execution
+    severity: HIGH
+    remediation: Use reviewed local code or a pinned artifact with verified integrity; require approval.
+  - id: SQSP-S003
+    title: Dynamic Python execution or shell invocation
+    category: dangerous-execution
+    severity: HIGH
+    remediation: Replace dynamic code execution with structured operations and argument arrays.
+  - id: SQSP-S004
+    title: Unsupported binary or nested payload
+    category: opaque-payload
+    severity: HIGH
+    remediation: Remove opaque payloads or review them using a dedicated supported analyzer.
+  - id: SQSP-S005
+    title: Explicit instruction hierarchy override
+    category: prompt-injection
+    severity: HIGH
+    remediation: Remove instructions that bypass host policies or disclose privileged prompts.
+  - id: SQSP-S006
+    title: Sensitive or workspace-external filesystem path
+    category: sensitive-filesystem
+    severity: HIGH
+    remediation: Restrict access to approved workspace paths; never read real host credentials.
+  - id: SQSP-S007
+    title: Suspected embedded secret
+    category: plaintext-secret
+    severity: HIGH
+    remediation: Remove and rotate real credentials; use approved secret injection only in trusted runtimes.
+  - id: SQSP-S008
+    title: Mutable remote executable instruction
+    category: mutable-instructions
+    severity: MEDIUM
+    remediation: Vendor reviewed instructions locally or lock a commit/hash and verify integrity.
+  - id: SQSP-S009
+    title: Declared network deny conflicts with script
+    category: permission-conflict
+    severity: MEDIUM
+    remediation: Remove network calls or obtain an explicitly approved policy change; declarations do not grant access.
+  - id: SQSP-S010
+    title: Unvalidated input influences filesystem write path
+    category: unsafe-path-input
+    severity: MEDIUM
+    remediation: Resolve the target under an approved output directory and enforce containment before writing.
+  - id: SQSP-S011
+    title: Dependency locking or vulnerability coverage incomplete
+    category: dependency-coverage
+    severity: MEDIUM
+    remediation: Pin dependency versions and commit a supported lock file; use a versioned vulnerability adapter.
+  - id: SQSP-S012
+    title: Install hook or setup executes commands
+    category: install-hook
+    severity: MEDIUM
+    remediation: Remove installation-time execution or review a pinned, minimal installation procedure.
+  - id: SQSP-S013
+    title: High-impact action lacks confirmation
+    category: high-impact-action
+    severity: MEDIUM
+    remediation: Require explicit user confirmation and enforce approval in the trusted execution layer.
+  - id: SQSP-S014
+    title: Broad requested permissions require human review
+    category: excessive-permissions
+    severity: MEDIUM
+    remediation: Narrow requested tools, paths and secret access to what the task actually needs.
+  - id: SQSP-S015
+    title: External tool instructions lack failure handling
+    category: maintainability
+    severity: LOW
+    remediation: Document required tool versions and concrete failure, timeout and recovery behavior.
+  - id: SQSP-S016
+    title: Missing tests, license or version metadata
+    category: maintainability
+    severity: INFO
+    remediation: Provide evaluation cases, a license and a declared version; these do not prove runtime correctness.

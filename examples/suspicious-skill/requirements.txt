@@ -1,0 +1,2 @@
+# Synthetic unpinned dependency fixture; never install this file.
+requests>=2

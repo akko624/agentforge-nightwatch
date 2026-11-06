@@ -1,0 +1,40 @@
+name: Verify AgentForge NightWatch
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install --require-hashes -r requirements-dev.lock
+          python -m pip install --no-deps -e .
+      - name: Verify backend
+        run: |
+          python -m pytest backend/tests -q
+          python -m ruff check backend worker scripts agent_skills
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: npm ci
+      - name: Verify frontend
+        working-directory: frontend
+        run: |
+          npm test -- --pool=threads --maxWorkers=1
+          npm run build
+          npm run build:report

@@ -1,0 +1,7 @@
+interface:
+  display_name: "SkillForge NightWatch"
+  short_description: "Safely audit and evolve local Agent Skills"
+  brand_color: "#27694F"
+  default_prompt: "Use $skillforge-nightwatch to scan this local Agent Skill ZIP and summarize the evidence without executing it."
+policy:
+  allow_implicit_invocation: true
