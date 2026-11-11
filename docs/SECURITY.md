@@ -1,6 +1,6 @@
 # 安全边界
 
-上传 Skill 是不可信数据。API 与静态 Worker 只解码、解析和匹配文本 / AST；不得执行、import、shell 调用或运行上传脚本。正常容器加固不是恶意代码沙箱，Compose 不启用动态执行。
+上传 Skill 是不可信数据。API 与静态 Worker 只解码、解析和匹配文本 / AST；不得执行、import、shell 调用或运行上传脚本。本地 SQLite Worker 不是恶意代码沙箱，也不启用动态执行。
 
 ## 导入边界
 
@@ -10,9 +10,9 @@ ZIP 检查路径、设备名、重复路径、Unicode 归一化、条目类型�
 
 ## 运行与凭据
 
-API / Worker 使用非 root 用户、只读根文件系统、删除 Linux capabilities、禁止提权和受限 tmpfs。它们不挂载 Docker socket、宿主 HOME、生产凭据或敏感目录。Compose 端口绑定 loopback；数据库与队列没有公开端口。
+本地启动只绑定 `127.0.0.1`，API 和 Worker 仅访问项目的 SQLite 数据库与 ArtifactStore；不读取宿主 HOME、生产凭据或敏感目录。停止脚本只终止已记录且身份匹配的本项目进程。
 
-动态 Runner 必须在独立可信执行环境中实现，先验证隔离能力，再运行白名单测试 profile。没有适用的 gVisor / microVM 或无法落实权限时返回 `UNAVAILABLE` / `UNSUPPORTED`。不得使用本机 subprocess 或普通 Docker 容器替代。
+动态 Runner 必须在独立可信执行环境中实现，先验证隔离能力，再运行白名单测试 profile。没有适用的 gVisor / microVM 或无法落实权限时返回 `UNAVAILABLE` / `UNSUPPORTED`。不得使用本机 `subprocess`、浏览器或普通容器替代。
 
 ## 报告与日志
 

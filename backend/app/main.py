@@ -46,12 +46,9 @@ def create_app() -> FastAPI:
             with get_engine().connect() as connection:
                 connection.execute(text("SELECT 1"))
                 connection.execute(text("SELECT id FROM scans LIMIT 1"))
-            if get_settings().queue_backend == "redis":
-                from redis import Redis
-                Redis.from_url(get_settings().redis_url, socket_connect_timeout=2, socket_timeout=2).ping()
         except Exception:
-            raise PlatformError("NOT_READY", "Database migrations or queue unavailable", 503) from None
-        return {"status": "ready", "queue": get_settings().queue_backend}
+            raise PlatformError("NOT_READY", "Database migrations are not ready", 503) from None
+        return {"status": "ready", "queue": "database"}
 
     return app
 

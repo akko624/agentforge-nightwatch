@@ -19,7 +19,6 @@ def configured(tmp_path, monkeypatch):
     else:
         monkeypatch.setenv("SQSP_DATABASE_URL", f"sqlite:///{(tmp_path / 'test.db').as_posix()}")
     monkeypatch.setenv("SQSP_ARTIFACT_ROOT", str(tmp_path / "artifacts"))
-    monkeypatch.setenv("SQSP_QUEUE_BACKEND", "database")
     get_settings.cache_clear()
     get_engine.cache_clear()
     if test_url:

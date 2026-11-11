@@ -1,6 +1,5 @@
 from functools import lru_cache
 from pathlib import Path
-from typing import Literal
 
 from pydantic import Field, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -11,8 +10,6 @@ ROOT = Path(__file__).resolve().parents[3]
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_prefix="SQSP_", env_file=".env", extra="ignore")
     database_url: str = "sqlite:///./data/sqsp.db"
-    redis_url: str = "redis://localhost:6379/0"
-    queue_backend: Literal["redis", "database"] = "database"
     artifact_root: Path = Path("data/artifacts")
     rules_path: Path = ROOT / "rules/builtin-rules.yaml"
     policy_path: Path = ROOT / "rules/policy.yaml"

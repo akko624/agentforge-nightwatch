@@ -2,7 +2,6 @@ from datetime import UTC, datetime
 from uuid import uuid4
 
 from sqlalchemy import JSON, DateTime, Float, ForeignKey, Index, Integer, String, UniqueConstraint
-from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 from sqlalchemy.types import TypeDecorator
 
@@ -29,7 +28,7 @@ class UTCDateTime(TypeDecorator):
         return value
 
 
-JsonType = JSON().with_variant(JSONB(), "postgresql")
+JsonType = JSON()
 
 
 class Skill(Base):

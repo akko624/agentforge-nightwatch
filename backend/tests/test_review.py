@@ -2,7 +2,6 @@
 
 from datetime import timedelta
 
-import pytest
 from sqlalchemy import update
 from sqlalchemy.orm import Session
 
@@ -77,8 +76,7 @@ def test_review_report_signature_tracks_policy_change_before_execution(client, c
         assert scan.scanner_versions["policy_sha256"] == actual_policy_hash
 
 
-@pytest.mark.parametrize("queue_backend", ["database", "redis"])
-def test_review_expired_cleanup_does_not_clobber_worker_completion(client, monkeypatch, queue_backend):
+def test_review_expired_cleanup_does_not_clobber_worker_completion(client, monkeypatch):
     from backend.app.scan.orchestrator import run_pending_scan
 
     scan_id = create_job(client)
@@ -114,17 +112,7 @@ def test_review_expired_cleanup_does_not_clobber_worker_completion(client, monke
         return ResultBeforeCompletion()
 
     monkeypatch.setattr(Session, "scalars", select_before_concurrent_completion)
-    if queue_backend == "database":
-        run_pending_scan()
-    else:
-        import rq
-
-        from backend.app.scan.queue import reconcile_redis_queue
-
-        # Exhausted leases do not enqueue anything; Redis is irrelevant to this
-        # race, so only replace the Queue constructor and keep real SQL logic.
-        monkeypatch.setattr(rq, "Queue", lambda *args, **kwargs: None)
-        reconcile_redis_queue(object())
+    run_pending_scan()
     assert interleaved
     with session_factory()() as db:
         scan = db.get(Scan, scan_id)
@@ -139,27 +127,6 @@ def test_review_effective_permissions_respect_explicit_declaration_deny():
     declaration = {"security": {"filesystem": {"read": [path], "deny": [path]}}}
     policy = {"approved_permissions": {"filesystem": {"read": ["${WORKSPACE}/inputs/**"]}}}
     assert permission_intersection(declaration, policy)["effective"]["filesystem"]["read"] == []
-
-
-def test_review_enqueue_ack_failure_cannot_overwrite_finished_scan(client, configured, monkeypatch):
-    from rq import Queue
-
-    configured.queue_backend = "redis"
-
-    def enqueue_after_worker_completion(queue, function, scan_id, **kwargs):
-        function(scan_id)  # Redis accepted the job and a worker already finished.
-        raise TimeoutError("Synthetic lost Redis acknowledgement")
-
-    monkeypatch.setattr(Queue, "enqueue", enqueue_after_worker_completion)
-    from backend.tests.test_upload import upload, valid_zip
-    version_id = upload(client, valid_zip()).json()["version_id"]
-    response = client.post("/api/v1/scans", json={"version_id": version_id})
-    body = response.json()
-    scan_id = body.get("scan_id") or body["error"]["details"]["scan_id"]
-    with session_factory()() as db:
-        scan = db.get(Scan, scan_id)
-        assert scan.status == "PARTIAL"
-        assert scan.error_code is None
 
 
 def test_review_scan_summary_redacts_secret_shaped_author_name(client):

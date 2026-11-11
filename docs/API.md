@@ -13,7 +13,7 @@
 | 方法 | 路径 | 说明 |
 |---|---|---|
 | GET | `/healthz` | 存活与应用版本 |
-| GET | `/readyz` | 数据库迁移状态；Redis 模式额外检查队列连接 |
+| GET | `/readyz` | SQLite 数据库与迁移状态 |
 | POST | `/api/v1/skills/upload` | multipart `file` ZIP、`owner_label` 可选；201 返回 skill_id / version_id / sha256 |
 | GET | `/api/v1/skills` | q / offset / limit；返回 items / total |
 | GET | `/api/v1/skills/{id}/versions` | 同一 Skill 的版本、manifest 与文件清单 |
@@ -28,7 +28,7 @@
 
 上传只接受本地 ZIP，不接受 URL。所有 ZIP / YAML / 资源限制失败有精确错误码，例如 `INVALID_ARCHIVE`、`ARCHIVE_LIMIT`、`UNSAFE_YAML`、`INVALID_FRONTMATTER`、`INVALID_SKILL_NAME`、`INVALID_SECURITY_DECLARATION`、`INVALID_EVALS`。
 
-入队后源码 / 规则 / 策略签名发生变化时，扫描以 `SCAN_CONFIG_CHANGED` 失败，报告不伪装为原签名运行结果；队列失败、工件 hash 不符、租约耗尽分别保留明确错误码。`permissions` 报告包含声明与平台批准的交集，`execution_enforcement` 仍为 UNAVAILABLE。
+入队后源码 / 规则 / 策略签名发生变化时，扫描以 `SCAN_CONFIG_CHANGED` 失败，报告不伪装为原签名运行结果；工件 hash 不符、租约耗尽分别保留明确错误码。`permissions` 报告包含声明与平台批准的交集，`execution_enforcement` 仍为 UNAVAILABLE。
 
 扫描模式为 `schema`、`static`、`dependencies`、`semantic`、`dynamic`、`quality`；默认 `schema/static/quality`。同工件、同模式、同规则 / 策略 / 扫描器签名默认复用已有非失败扫描；`force: true` 创建新扫描。API 立即返回，报告由独立 Worker 生成。
 

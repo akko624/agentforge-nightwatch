@@ -1,14 +1,14 @@
 from typing import Annotated, Literal
 
 from fastapi import APIRouter, Depends, File, Form, Query, Response, UploadFile
-from sqlalchemy import func, select, update
+from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from backend.app.core.config import get_settings
 from backend.app.core.errors import PlatformError
 from backend.app.core.redaction import redact, redact_object
-from backend.app.db.models import AuditEvent, FindingRecord, Scan, Skill, SkillVersion, now
+from backend.app.db.models import AuditEvent, FindingRecord, Scan, Skill, SkillVersion
 from backend.app.db.session import get_db
 from backend.app.ingest.safe_zip import read_archive
 from backend.app.ingest.store import LocalArtifactStore
@@ -141,28 +141,6 @@ def create_scan(body: ScanRequest, db: DB):
     db.add(AuditEvent(event_type="SCAN_QUEUED", resource_type="scan", resource_id=scan.id,
                       event_metadata_redacted={"modes": modes}))
     db.commit()
-    if settings.queue_backend == "redis":
-        try:
-            from redis import Redis
-            from rq import Queue
-
-            from backend.app.scan.orchestrator import run_scan
-            Queue("scans", connection=Redis.from_url(settings.redis_url, socket_timeout=3, socket_connect_timeout=3)).enqueue(
-                run_scan, scan.id, job_timeout=settings.worker_lease_seconds, result_ttl=3600, failure_ttl=86400,
-                job_id=scan.id)
-        except Exception:
-            updated = db.execute(update(Scan).where(Scan.id == scan.id, Scan.status == "QUEUED").execution_options(synchronize_session=False).values(
-                status="FAILED", error_code="QUEUE_UNAVAILABLE", completed_at=now())).rowcount
-            if updated:
-                db.add(AuditEvent(event_type="SCAN_FAILED", resource_type="scan", resource_id=scan.id,
-                                  event_metadata_redacted={"error_code": "QUEUE_UNAVAILABLE"}))
-            db.commit()
-            db.refresh(scan)
-            if not updated:
-                # An ACK may be lost after Redis accepted the job. Never replace
-                # a concurrent worker's RUNNING/completed state with a queue error.
-                return ScanCreated(scan_id=scan.id, status=scan.status)
-            raise PlatformError("QUEUE_UNAVAILABLE", "Scan could not be queued", 503, {"scan_id": scan.id}) from None
     return ScanCreated(scan_id=scan.id, status=scan.status)
 
 

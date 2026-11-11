@@ -1,8 +1,6 @@
 """initial_schema"""
 import sqlalchemy as sa
 from alembic import op
-from sqlalchemy import Text
-from sqlalchemy.dialects import postgresql
 
 revision = 'e484c6f237b3'
 down_revision = None
@@ -17,7 +15,7 @@ def upgrade():
     sa.Column('event_type', sa.String(length=80), nullable=False),
     sa.Column('resource_type', sa.String(length=80), nullable=False),
     sa.Column('resource_id', sa.String(length=36), nullable=False),
-    sa.Column('event_metadata_redacted', sa.JSON().with_variant(postgresql.JSONB(astext_type=Text()), 'postgresql'), nullable=False),
+    sa.Column('event_metadata_redacted', sa.JSON(), nullable=False),
     sa.Column('created_at', sa.DateTime(timezone=True), nullable=False),
     sa.PrimaryKeyConstraint('id')
     )
@@ -37,8 +35,8 @@ def upgrade():
     sa.Column('version_label', sa.String(length=64), nullable=True),
     sa.Column('artifact_sha256', sa.String(length=64), nullable=False),
     sa.Column('artifact_storage_key', sa.String(length=255), nullable=False),
-    sa.Column('manifest_json', sa.JSON().with_variant(postgresql.JSONB(astext_type=Text()), 'postgresql'), nullable=False),
-    sa.Column('file_inventory_json', sa.JSON().with_variant(postgresql.JSONB(astext_type=Text()), 'postgresql'), nullable=False),
+    sa.Column('manifest_json', sa.JSON(), nullable=False),
+    sa.Column('file_inventory_json', sa.JSON(), nullable=False),
     sa.Column('created_at', sa.DateTime(timezone=True), nullable=False),
     sa.ForeignKeyConstraint(['skill_id'], ['skills.id'], ),
     sa.PrimaryKeyConstraint('id'),
@@ -50,9 +48,9 @@ def upgrade():
     sa.Column('id', sa.String(length=36), nullable=False),
     sa.Column('skill_version_id', sa.String(length=36), nullable=False),
     sa.Column('status', sa.String(length=20), nullable=False),
-    sa.Column('requested_modes', sa.JSON().with_variant(postgresql.JSONB(astext_type=Text()), 'postgresql'), nullable=False),
-    sa.Column('stage_status', sa.JSON().with_variant(postgresql.JSONB(astext_type=Text()), 'postgresql'), nullable=False),
-    sa.Column('scanner_versions', sa.JSON().with_variant(postgresql.JSONB(astext_type=Text()), 'postgresql'), nullable=False),
+    sa.Column('requested_modes', sa.JSON(), nullable=False),
+    sa.Column('stage_status', sa.JSON(), nullable=False),
+    sa.Column('scanner_versions', sa.JSON(), nullable=False),
     sa.Column('policy_version', sa.String(length=50), nullable=False),
     sa.Column('quality_score', sa.Float(), nullable=True),
     sa.Column('quality_coverage', sa.Float(), nullable=False),
@@ -67,7 +65,7 @@ def upgrade():
     sa.Column('lease_token', sa.String(length=36), nullable=True),
     sa.Column('lease_expires_at', sa.DateTime(timezone=True), nullable=True),
     sa.Column('report_key', sa.String(length=255), nullable=True),
-    sa.Column('report_json', sa.JSON().with_variant(postgresql.JSONB(astext_type=Text()), 'postgresql'), nullable=True),
+    sa.Column('report_json', sa.JSON(), nullable=True),
     sa.ForeignKeyConstraint(['skill_version_id'], ['skill_versions.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
@@ -80,7 +78,7 @@ def upgrade():
     sa.Column('engine', sa.String(length=80), nullable=False),
     sa.Column('severity', sa.String(length=20), nullable=False),
     sa.Column('fingerprint', sa.String(length=64), nullable=False),
-    sa.Column('payload', sa.JSON().with_variant(postgresql.JSONB(astext_type=Text()), 'postgresql'), nullable=False),
+    sa.Column('payload', sa.JSON(), nullable=False),
     sa.ForeignKeyConstraint(['scan_id'], ['scans.id'], ),
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('scan_id', 'fingerprint')
@@ -92,7 +90,7 @@ def upgrade():
     sa.Column('id', sa.String(length=36), nullable=False),
     sa.Column('scan_id', sa.String(length=36), nullable=False),
     sa.Column('dimension', sa.String(length=80), nullable=False),
-    sa.Column('payload', sa.JSON().with_variant(postgresql.JSONB(astext_type=Text()), 'postgresql'), nullable=False),
+    sa.Column('payload', sa.JSON(), nullable=False),
     sa.ForeignKeyConstraint(['scan_id'], ['scans.id'], ),
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('scan_id', 'dimension')

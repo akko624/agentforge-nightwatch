@@ -51,14 +51,13 @@ function Start-RecordedProcess {
 }
 
 $savedEnvironment = @{}
-foreach ($variableName in @('SQSP_DATABASE_URL', 'SQSP_QUEUE_BACKEND', 'SQSP_ARTIFACT_ROOT', 'PYTHONDONTWRITEBYTECODE')) {
+foreach ($variableName in @('SQSP_DATABASE_URL', 'SQSP_ARTIFACT_ROOT', 'PYTHONDONTWRITEBYTECODE')) {
     $savedEnvironment[$variableName] = [Environment]::GetEnvironmentVariable($variableName, 'Process')
 }
 $originalDirectory = Get-Location
 try {
     Set-Location -LiteralPath $repoRoot
     $env:SQSP_DATABASE_URL = 'sqlite:///./data/sqsp.db'
-    $env:SQSP_QUEUE_BACKEND = 'database'
     $env:SQSP_ARTIFACT_ROOT = './data/artifacts'
     $env:PYTHONDONTWRITEBYTECODE = '1'
     & $pythonExecutable -m alembic upgrade head
