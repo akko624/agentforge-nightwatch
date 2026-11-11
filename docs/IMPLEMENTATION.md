@@ -4,7 +4,7 @@
 
 - Phase 0：FastAPI、SQLAlchemy、Alembic、React / TypeScript / Vite、锁定依赖、SQLite 默认配置与本地启动脚本。
 - Phase 1：安全 ZIP 摄入、YAML / 引用检查、内容哈希与本地 ArtifactStore。
-- Phase 2：独立 Worker、SQLite 持久化队列、原子领取与租约、确定性静态安全规则、质量覆盖与策略门禁。
+- Phase 2：独立 Worker、SQLite 持久化队列、原子领取与租约、确定性静态安全规则、四维静态可验证性检查、质量覆盖与策略门禁。
 - Phase 3：扫描看板、风险 / 覆盖 / 阶段可视化、证据筛选、报告导出、版本比较、静态报告查看器和脱敏聚合报告构建。
 
 ## 运行闭环
@@ -13,7 +13,7 @@
 
 ## 依赖与边界
 
-运行不需要 Docker、外部数据库、缓存或消息队列。依赖锁定在 `requirements.lock` / `requirements-dev.lock`，前端使用 `package-lock.json`。动态、模型和真实宿主评测仍没有可信执行环境，报告保持 `UNAVAILABLE` / `NOT_RUN`，不会以不安全方式替代。
+运行不需要 Docker、外部数据库、缓存或消息队列。依赖锁定在 `requirements.lock` / `requirements-dev.lock`，前端使用 `package-lock.json`。质量报告会对四个维度运行确定性静态可验证性检查，并显示 `quality_coverage`；真实宿主评测的 `runtime_coverage` 仍为 0，动态、模型和真实宿主评测没有可信执行环境时保持 `UNAVAILABLE` / `NOT_RUN`，不会以不安全方式替代。
 
 ## 本次重构后的验收
 

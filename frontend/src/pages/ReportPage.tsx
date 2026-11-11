@@ -10,7 +10,7 @@ import { ReportBoard } from '../components/report/ReportBoard';
 import { SkillEvolutionAdvisor } from '../components/report/SkillEvolutionAdvisor';
 
 interface QualityCheckRow { key: string; label: string; category: string; passed: boolean | null; reference: string }
-const checkCategoryLabels: Record<string, string> = { official_required: '官方必填', official_optional: '官方可选', package_integrity: '包内完整性', platform_recommendation: '平台建议' };
+const checkCategoryLabels: Record<string, string> = { official_required: '官方必填', official_optional: '官方可选', package_integrity: '包内完整性', platform_recommendation: '平台建议', static_verifiability: '静态可验证性' };
 function QualityChecks({ checks }: { checks: unknown[] }) {
   const rows: QualityCheckRow[] = checks.map((check, index) => {
     const value = check !== null && typeof check === 'object' && !Array.isArray(check) ? check as Record<string, unknown> : {};
@@ -28,13 +28,15 @@ function QualityChecks({ checks }: { checks: unknown[] }) {
 
 function QualityPanel({ report }: { report: FullReport }) {
   return <>
-    <Alert type="info" showIcon message={report.quality.score === null ? '完整质量分未评测，不等于 0 分' : '完整质量分'} description="静态启发式只衡量结构与说明。功能正确性、触发率、任务成功率与稳定性必须来自真实宿主；未运行项不计为通过。" />
+    <Alert type="info" showIcon message={report.quality.score === null ? '完整质量分未评测，不等于 0 分' : '完整质量分'} description="四个维度均已做静态可验证性检查，可直接指出缺失的用例、断言与稳定性约定；功能成功率、稳定性、延迟和资源效率仍必须在可信隔离 Runner 中真实观测，不能用本机执行替代。" />
     <div className="quality-grid">{report.quality.dimensions.map((dimension) => <Card key={dimension.dimension} size="small" title={dimensionLabels[dimension.dimension] ?? dimension.dimension} extra={<span className="muted">权重 {percent(dimension.weight)}</span>}>
       <Space direction="vertical" size={12} style={{ width: '100%' }}><StatusTag status={dimension.status} /><Statistic title="本维度得分" value={dimension.score ?? '未评测'} precision={dimension.score === null ? undefined : 1} suffix={dimension.score === null ? undefined : '/ 100'} />
         {dimension.score !== null && <Progress percent={dimension.score} showInfo={false} strokeColor="#176b50" />}
+        {dimension.evidence_level === 'STATIC_VERIFIABILITY' && <Tag color="blue">静态可验证性检查</Tag>}
         {dimension.reason && <Typography.Text type="secondary">{dimension.reason}</Typography.Text>}
         {dimension.metric && <Typography.Text type="secondary">指标：{dimension.metric}</Typography.Text>}
         {!!dimension.checks?.length && <details><summary>查看检查依据（{dimension.checks.length} 项）</summary><QualityChecks checks={dimension.checks} /></details>}
+        {dimension.runtime_status && dimension.runtime_status !== 'NOT_APPLICABLE' && <Alert type="warning" showIcon message={`真实运行验证：${dimension.runtime_status === 'UNAVAILABLE' ? '当前不可用' : dimension.runtime_status}`} description={dimension.runtime_reason || '未记录运行时原因'} />}
         {dimension.runner_version && <Typography.Text type="secondary">评测器版本：{dimension.runner_version}</Typography.Text>}
       </Space>
     </Card>)}</div>

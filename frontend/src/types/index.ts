@@ -15,11 +15,12 @@ export type ScanCreated = components['schemas']['ScanCreated'] & { status: ScanS
 export interface QualityDimension {
   dimension: string; weight: number; status: string; score: number | null; metric?: string;
   numerator?: number | null; denominator?: number | null; checks?: unknown[]; reason?: string | null;
-  runner_version?: string; evidence_ref?: unknown;
+  runner_version?: string; evidence_ref?: unknown; evidence_level?: string;
+  runtime_status?: string; runtime_reason?: string | null;
 }
 // The backend currently describes nested report dictionaries without schemas;
 // only these dictionaries are refined locally, retaining generated top-level DTOs.
-export type QualityReport = Omit<DefinedFields<components['schemas']['QualityReport']>, 'dimensions'> & { dimensions: QualityDimension[] };
+export type QualityReport = Omit<DefinedFields<components['schemas']['QualityReport']>, 'dimensions'> & { dimensions: QualityDimension[]; runtime_coverage?: number };
 export interface InventoryEntry { path: string; size: number; sha256: string; kind: string; hidden: boolean; executable: boolean; parseable: boolean }
 export type FullReport = Omit<DefinedFields<components['schemas']['FullReport']>, 'artifact' | 'engines' | 'compliance' | 'security' | 'quality' | 'decision' | 'provenance' | 'logs'> & {
   artifact: { name: string; sha256: string; files: number; version_id: string; version_label: string | null; manifest: Record<string, unknown>; inventory: InventoryEntry[] };

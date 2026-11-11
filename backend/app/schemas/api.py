@@ -80,6 +80,7 @@ class FindingList(BaseModel):
 class QualityReport(BaseModel):
     score: float | None
     coverage: float
+    runtime_coverage: float = 0
     static_subscore: float | None
     dimensions: list[dict]
     reasons: list[str]

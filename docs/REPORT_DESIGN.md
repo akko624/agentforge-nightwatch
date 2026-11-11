@@ -33,7 +33,7 @@
 | 发布决策卡 | `scan.release_decision`、策略版本 | 大色块标题，保留BLOCK/INCOMPLETE/REVIEW/ALLOW原枚举 | ALLOW只指当前配置门禁，不是安全认证；导入报告标为“报告声明的发布决策” |
 | 风险/质量/文件KPI | 完整finding计数、`quality.static_subscore`、`artifact.files` | 四列摘要区，数字+解释 | 局部分与完整质量分分开；null显示未评测；公开摘要不补造文件清单/大小 |
 | 风险等级堆叠条 | `security.finding_counts`，各等级占总finding数比例 | SVG横条+五个带数字的图例按钮 | 条形表示发现分布，不是安全分；0条仍明确“不代表无风险” |
-| 质量覆盖环图 | `quality.coverage` | SVG圆环与灰色未完成区域 | 40%是已完成维度权重，不是质量40分或安全通过率40% |
+| 静态质量覆盖环图 | `quality.coverage` / `runtime_coverage` | SVG 圆环与运行时状态说明 | 覆盖的是四个维度的静态可验证性检查，不是质量分或安全通过率；真实 Runner 未接入时 `runtime_coverage=0`。 |
 | 四维权重图 | 四维固定20/20/40/20及原始score/status | 细条权重、已测绿色/未测斜纹、每维标签 | 未测项不赋0或100，不把已测部分重归一化成完整分 |
 | 检测能力矩阵 | `scan.stages` | 六阶段状态格，已完成/发现/部分/不可用/错误分别着色并显示文本 | PARTIAL/ERROR/TIMEOUT/UNAVAILABLE不计为完整通过 |
 | 阶段耗时柱图 | 已运行且有记录的`duration_ms` | 与最大已记录时长相对的水平条，旁边标ms | 未运行项显示“未测”，缺失显示“未记录”；合计不含排队，不是宿主任务延迟 |
@@ -102,7 +102,7 @@ SVG图表含`role="img"`、`title`或`aria-label`；表格含caption和行/列�
 
 | 验证层 | 本轮检查内容 | 代码/验收依据 |
 |---|---|---|
-| 看板单元测试 | 40%覆盖与null保留、严重度回调、无fetch、聚合缺细节、导入未验签、缺失耗时不变0、无风险不认证、路径HTML转义 | `frontend/tests/report-board.test.tsx` |
+| 看板单元测试 | 静态覆盖与null保留、运行时未知提示、严重度回调、无fetch、聚合缺细节、导入未验签、缺失耗时不变0、无风险不认证、路径HTML转义 | `frontend/tests/report-board.test.tsx` |
 | 原页面回归 | 上传、列表、报告筛选、展开、比较、导出行为 | `frontend/tests/workflow.test.tsx`、`api.test.ts` |
 | 本地导入 | 格式/大小/统计与空值、聚合投影、非法/敏感文本、状态切换 | `frontend/tests/local-report.test.ts`、`viewer.test.tsx` |
 | 静态打包 | 允许列表、输出不存在、目录范围、脚本数据转义、无私有文件复制 | `backend/tests/test_public_report.py`、`test_public_review.py` |
@@ -118,7 +118,7 @@ SVG图表含`role="img"`、`title`或`aria-label`；表格含caption和行/列�
 | 独立静态构建 | `npm run build:report` 成功 |
 | 后端回归 | **201 passed**；SQLite 持久化队列、独立 Worker 及租约恢复均纳入本地回归 |
 | Python静态检查 | Ruff通过 |
-| 平台报告浏览器QA | Edge显示实际13条分布：严重1、高5、中5、低1、提示1；HIGH图例联动到下方5条证据；覆盖环图40%、完整分null与未测项正确 |
+| 平台报告浏览器QA | Edge 显示实际风险分布；HIGH 图例联动到下方证据；四维静态检查覆盖、完整分 null 与运行时未知提示正确 |
 | 独立静态包浏览器QA | 本机HTTP 4180打开内嵌聚合摘要；未出现原名、路径、证据；规则/策略版本显示“未披露”；未验签标记、风险/覆盖/阶段及聚合表可见 |
 | 静态交付体积 | ZIP **288,809 bytes，约282 KiB**；JS合计gzip约287.6kB |
 | 已知警告 | 前端保留大于500kB的共享chunk体积警告；后端沿用Starlette TestClient/httpx弃用警告 |

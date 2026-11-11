@@ -43,7 +43,7 @@ Set-Location frontend; npm run dev -- --host 127.0.0.1 --port 5173 --strictPort
 
 ## 报告看板与静态分享
 
-扫描报告包含真实数据驱动的 SVG 风险分布、质量覆盖环图、阶段状态矩阵、耗时条和 Top 风险文件表；风险图例可筛选下方证据。未测维度保持 `NOT_RUN`，完整质量分不会补零。
+扫描报告包含真实数据驱动的 SVG 风险分布、静态质量检查覆盖环图、阶段状态矩阵、耗时条和 Top 风险文件表；风险图例可筛选下方证据。质量页会覆盖规范符合性、可维护性、功能正确性和稳定性/效率四个维度的静态可验证性：功能/正反向/边界用例、可观察断言、重复用例、时限、恢复、幂等和依赖失败约定均会逐项显示。完整运行时质量分不会补零。
 
 `/viewer` 可在浏览器内存读取已有 JSON，不调用扫描 API。可构建完全独立的静态报告查看器或经脱敏的聚合摘要，用于公开静态托管：
 
@@ -81,7 +81,7 @@ Set-Location frontend; npm test; npm run build; npm run build:report
 ## 安全与能力边界
 
 - S001–S016 是确定性静态规则，存在误报和漏报；AST 数据流仅限局部分析。
-- 质量覆盖最多 40%。缺少真实功能正确性和稳定性数据时，`quality_score` 保持 `null`。
+- 四个质量维度均有静态可验证性检查，`quality_coverage` 表示这些确定性检查的覆盖权重；`runtime_coverage` 仍为 0，缺少真实功能正确性和稳定性数据时，`quality_score` 必须保持 `null`。
 - 动态 Runner、模型语义分析、真实宿主评测和漏洞库未接入，始终返回 `UNAVAILABLE` / `NOT_RUN`；绝不以本机 `subprocess`、浏览器或普通容器作为不安全替代。
 - `BLOCK > INCOMPLETE > REVIEW > ALLOW`；静态门禁 `ALLOW` 不是全面安全保证。
 - MVP 是本机单用户工具，没有认证、RBAC 或多租户；不要上传生产凭据或客户数据。

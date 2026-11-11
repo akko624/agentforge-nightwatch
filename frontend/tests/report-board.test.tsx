@@ -16,6 +16,25 @@ describe('evidence-driven report board', () => {
     expect(screen.getByText('结构与说明的启发式，不代表任务成功率')).toBeInTheDocument();
   });
 
+  it('labels complete static checks separately from unavailable runtime evidence', () => {
+    const staticQuality: FullReport = {
+      ...report,
+      quality: {
+        ...report.quality,
+        coverage: 1,
+        runtime_coverage: 0,
+        dimensions: report.quality.dimensions.map((dimension) => ({
+          ...dimension, status: 'FINDINGS', score: 60, evidence_level: 'STATIC_VERIFIABILITY',
+          runtime_status: dimension.dimension === 'correctness' || dimension.dimension === 'reliability' ? 'UNAVAILABLE' : 'NOT_APPLICABLE',
+        })),
+      },
+    };
+    render(<ReportBoard report={staticQuality} scan={scan} />);
+    expect(screen.getByRole('img', { name: '静态质量检查覆盖 100%，运行时评测尚未完成' })).toBeInTheDocument();
+    expect(screen.getByText('运行时：尚未观测')).toBeInTheDocument();
+    expect(screen.getByText('静态质量检查，保留运行时未知')).toBeInTheDocument();
+  });
+
   it('uses complete-report counts and sends a severity selection without requests', () => {
     const onSelect = vi.fn();
     const fetchSpy = vi.fn(); vi.stubGlobal('fetch', fetchSpy);

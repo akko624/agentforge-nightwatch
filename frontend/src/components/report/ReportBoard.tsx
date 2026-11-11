@@ -57,6 +57,7 @@ export function ReportBoard({ report, scan, onSeveritySelect, selectedSeverity, 
   const maxDuration = Math.max(0, ...timedStages.map(([, stage]) => stage.duration_ms!));
   const measuredDuration = timedStages.reduce((sum, [, stage]) => sum + stage.duration_ms!, 0);
   const coverage = Math.max(0, Math.min(1, report.quality.coverage));
+  const staticVerifiability = report.quality.dimensions.some((dimension) => dimension.evidence_level === 'STATIC_VERIFIABILITY');
   const coverPercent = Math.round(coverage * 100);
   const circumference = 2 * Math.PI * 54;
   const decision = decisions[scan.release_decision] ?? { title: '结论待确认', detail: '请检查报告阶段与门禁记录，不能将未知状态视为通过。', tone: 'incomplete' };
@@ -121,19 +122,19 @@ export function ReportBoard({ report, scan, onSeveritySelect, selectedSeverity, 
       </article>
 
       <article className="board-panel board-coverage-panel">
-        <div className="board-panel-heading"><div><span className="board-panel-index">02 / MEASUREMENT</span><h3>质量覆盖，保留未知</h3></div><span className="board-panel-meta">完整模型权重</span></div>
+        <div className="board-panel-heading"><div><span className="board-panel-index">02 / MEASUREMENT</span><h3>{staticVerifiability ? '静态质量检查，保留运行时未知' : '质量覆盖，保留未知'}</h3></div><span className="board-panel-meta">完整模型权重</span></div>
         <div className="board-coverage-content">
-          <div className="board-ring-container"><svg className="board-coverage-ring" viewBox="0 0 140 140" role="img" aria-label={`质量评测覆盖 ${coverPercent}%，其余 ${100 - coverPercent}% 未完成`}>
+          <div className="board-ring-container"><svg className="board-coverage-ring" viewBox="0 0 140 140" role="img" aria-label={staticVerifiability ? `静态质量检查覆盖 ${coverPercent}%，运行时评测尚未完成` : `质量评测覆盖 ${coverPercent}%，其余 ${100 - coverPercent}% 未完成`}>
             <circle cx="70" cy="70" r="54" fill="none" stroke="#edf0ed" strokeWidth="12" />
             <circle cx="70" cy="70" r="54" fill="none" stroke="#27694f" strokeWidth="12" strokeDasharray={`${coverage * circumference} ${circumference}`} transform="rotate(-90 70 70)" />
             <text x="70" y="68" textAnchor="middle" className="board-ring-value">{coverPercent}%</text><text x="70" y="89" textAnchor="middle" className="board-ring-label">已测权重</text>
-          </svg><span>其余 {100 - coverPercent}% 未完成</span></div>
+          </svg><span>{staticVerifiability ? '运行时：尚未观测' : `其余 ${100 - coverPercent}% 未完成`}</span></div>
           <div className="board-dimensions">{report.quality.dimensions.map((dimension) => {
             const measured = dimension.score !== null && completed(dimension.status);
             return <div className="board-dimension" key={dimension.dimension}><div><span>{dimensionNames[dimension.dimension] ?? dimension.dimension}</span><strong>{Math.round(dimension.weight * 100)}%</strong></div><div className="board-weight-track"><span className={measured ? 'board-weight-measured' : 'board-weight-unknown'} style={{ width: `${Math.max(0, Math.min(1, dimension.weight)) * 100}%` }} /></div><small>{measured ? `本维度 ${dimension.score!.toFixed(1)} / 100` : `${stateNames[dimension.status] ?? dimension.status} · 不赋予分数`}</small></div>;
           })}</div>
         </div>
-        <p className="board-panel-note">覆盖率是已完成维度权重之和，不是质量分或安全通过率。未测维度不补零、不按已测部分重算完整分。</p>
+        <p className="board-panel-note">{staticVerifiability ? '覆盖率表示四个维度的静态可验证性检查已完成，不是质量分或安全通过率。真实运行时评测仍不补零、不按静态结果重算完整分。' : '覆盖率是已完成维度权重之和，不是质量分或安全通过率。未测维度不补零、不按已测部分重算完整分。'}</p>
       </article>
 
       <article className="board-panel board-stage-panel">

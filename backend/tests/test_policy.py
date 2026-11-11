@@ -42,7 +42,7 @@ def test_full_quality_policy_requires_observed_complete_coverage():
     result = decide([], stages(), policy, ["schema", "static"])
     assert result["release_decision"] == "INCOMPLETE"
     complete = stages()
-    complete["quality"]["coverage"] = {"quality_coverage": 1}
+    complete["quality"]["coverage"] = {"quality_coverage": 1, "runtime_coverage": 1}
     assert decide([], complete, policy, ["schema", "static"])["release_decision"] == "ALLOW"
 
 

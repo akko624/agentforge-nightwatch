@@ -59,6 +59,15 @@ def load_rules(path: Path | str | None = None) -> dict:
     return ruleset
 
 
+def _repair_advice(rule: dict, path: str, line: int, end: int) -> str:
+    """Produce a location-specific Chinese repair instruction without copying source."""
+    location = f"{path}:{line}" if line == end else f"{path}:{line}-{end}"
+    scope = rule.get("repair_scope", rule.get("category", "关联功能"))
+    action = rule.get("remediation", "人工审查该位置并按最小权限原则修复。")
+    verification = rule.get("verification", "修复后重新扫描，并人工复核相关功能与边界分支。")
+    return f"功能范围：{scope}。修复位置：{location}。具体操作：{action} 复测方式：{verification}"
+
+
 def _entropy(value: str) -> float:
     counts = Counter(value)
     return -sum((count / len(value)) * math.log2(count / len(value)) for count in counts.values())
@@ -156,7 +165,7 @@ class BuiltinStaticAnalyzer:
             findings.append(Finding(
                 rule_id=rule["id"], category=rule["category"], severity=severity or rule["severity"], confidence=confidence,
                 file_path=path, line_start=max(1, line), line_end=max(line, end), evidence_excerpt=snippet,
-                message=message or rule["title"], remediation=rule["remediation"], context_note=note,
+                message=message or rule["title"], remediation=_repair_advice(rule, path, max(1, line), max(line, end)), context_note=note,
                 matched_rule_version=self.ruleset["version"], engine_version=self.ruleset["engine_version"],
             ).safe())
 
@@ -302,7 +311,10 @@ class BuiltinStaticAnalyzer:
         body = context.parsed.body
         if (re.search(r"\b(?:tool|cli|command|curl|python|npm|pip|requires?)\b|外部工具|命令|依赖", body, re.I)
                 and not re.search(r"\b(?:error|fail|timeout|retry|unavailable|exception)\b|失败|错误|超时|重试|不可用", body, re.I)):
-            emit("S015", "SKILL.md", confidence="LOW", evidence="External-tool instructions have no recognizable failure/timeout handling section.")
+            tool_line = next((number for number, value in enumerate(file_lines.get("SKILL.md", []), 1)
+                              if re.search(r"\b(?:tool|cli|command|curl|python|npm|pip|requires?)\b|外部工具|命令|依赖", value, re.I)), 1)
+            emit("S015", "SKILL.md", tool_line, confidence="LOW",
+                 evidence="External-tool instructions have no recognizable failure/timeout handling section.")
         missing = []
         if not context.parsed.evals.get("cases"):
             missing.append("evaluation cases")

@@ -30,7 +30,8 @@ def decide(findings, stages: dict, policy: dict, modes: list[str]) -> dict:
     if policy.get("require_full_quality"):
         required.add("quality")
     incomplete = [name for name in sorted(required) if stages[name]["status"] not in {"PASSED", "FINDINGS"}]
-    if policy.get("require_full_quality") and stages["quality"].get("coverage", {}).get("quality_coverage", 0) < 1 and "quality" not in incomplete:
+    # Static declaration coverage never substitutes for observed isolated runs.
+    if policy.get("require_full_quality") and stages["quality"].get("coverage", {}).get("runtime_coverage", 0) < 1 and "quality" not in incomplete:
         incomplete.append("quality")
     if critical or unsafe_parse:
         verdict, decision = "BLOCK", "BLOCK"

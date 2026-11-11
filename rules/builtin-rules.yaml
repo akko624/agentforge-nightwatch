@@ -2,82 +2,114 @@ version: '1.0'
 engine_version: '0.1.0'
 rules:
   - id: SQSP-S001
-    title: Credential read and external transmission chain
+    title: 凭据读取后向外部网络传输
     category: credential-exfiltration
     severity: CRITICAL
-    remediation: Remove credential access and transmission; review the complete data flow.
+    remediation: 删除读取真实凭据并发送到网络的链路；仅在可信运行时通过受控注入获取所需凭据。
+    repair_scope: 凭据与网络数据流
+    verification: 重新扫描后应不再命中 S001；人工确认请求载荷、日志和异常分支均不包含凭据。
   - id: SQSP-S002
-    title: Remote download piped into shell
+    title: 远程下载内容直接交给 Shell 执行
     category: remote-code-execution
     severity: HIGH
-    remediation: Use reviewed local code or a pinned artifact with verified integrity; require approval.
+    remediation: 移除“下载后直接执行”；改用已审查的本地代码，或固定提交/哈希并在执行前校验完整性与用户确认。
+    repair_scope: 远程脚本安装或执行流程
+    verification: 重新扫描后应不再命中 S002；人工确认下载地址、固定哈希和确认步骤均可追溯。
   - id: SQSP-S003
-    title: Dynamic Python execution or shell invocation
+    title: 动态 Python 执行或 Shell 调用
     category: dangerous-execution
     severity: HIGH
-    remediation: Replace dynamic code execution with structured operations and argument arrays.
+    remediation: 用结构化 API 或固定参数数组替代 eval、exec、os.system 和 shell=True；不可避免时仅在可信隔离执行层实现并最小化输入。
+    repair_scope: 动态执行入口
+    verification: 重新扫描后应不再命中 S003；人工确认命令参数不由未校验输入拼接。
   - id: SQSP-S004
-    title: Unsupported binary or nested payload
+    title: 不支持解析的二进制或嵌套载荷
     category: opaque-payload
     severity: HIGH
-    remediation: Remove opaque payloads or review them using a dedicated supported analyzer.
+    remediation: 删除无法解释的二进制/嵌套载荷，或提交给支持该格式的专用分析器后再发布。
+    repair_scope: 不透明工件内容
+    verification: 重新打包并扫描，确认文件清单均可由当前分析器覆盖，或保留明确的人工审查记录。
   - id: SQSP-S005
-    title: Explicit instruction hierarchy override
+    title: 显式绕过指令层级
     category: prompt-injection
     severity: HIGH
-    remediation: Remove instructions that bypass host policies or disclose privileged prompts.
+    remediation: 删除要求忽略系统、开发者或宿主约束的文字；改为在 Skill 目的与权限边界内描述允许的操作。
+    repair_scope: 提示词与操作指令
+    verification: 重新扫描后应不再命中 S005；人工复读关联上下文，确认不存在同义绕过表述。
   - id: SQSP-S006
-    title: Sensitive or workspace-external filesystem path
+    title: 敏感或工作区外的文件路径
     category: sensitive-filesystem
     severity: HIGH
-    remediation: Restrict access to approved workspace paths; never read real host credentials.
+    remediation: 将读取范围收紧到批准的工作区输入目录；删除对用户目录、凭据目录和系统敏感文件的访问。
+    repair_scope: 文件系统访问范围
+    verification: 重新扫描后应不再命中 S006；人工确认安全声明与实际路径白名单一致。
   - id: SQSP-S007
-    title: Suspected embedded secret
+    title: 疑似硬编码密钥
     category: plaintext-secret
     severity: HIGH
-    remediation: Remove and rotate real credentials; use approved secret injection only in trusted runtimes.
+    remediation: 立即删除代码中的凭据并轮换可能已泄露的真实密钥；仅在可信运行时通过批准的秘密注入机制提供凭据。
+    repair_scope: 源码与配置中的凭据
+    verification: 重新扫描后应不再命中 S007；在密钥管理端确认旧凭据已吊销或轮换。
   - id: SQSP-S008
-    title: Mutable remote executable instruction
+    title: 可变远程地址中的可执行指令
     category: mutable-instructions
     severity: MEDIUM
-    remediation: Vendor reviewed instructions locally or lock a commit/hash and verify integrity.
+    remediation: 将审查过的指令固化到包内，或固定到不可变提交/内容哈希，并在使用前验证完整性。
+    repair_scope: 远程指令来源
+    verification: 重新扫描后应不再命中 S008；人工确认引用不能随远端分支或网页内容静默变化。
   - id: SQSP-S009
-    title: Declared network deny conflicts with script
+    title: 网络禁用声明与脚本网络调用冲突
     category: permission-conflict
     severity: MEDIUM
-    remediation: Remove network calls or obtain an explicitly approved policy change; declarations do not grant access.
+    remediation: 删除网络调用，或由平台策略显式批准最小化的网络权限；作者声明本身不构成运行时授权。
+    repair_scope: 网络权限与调用实现
+    verification: 重新扫描后应不再命中 S009；人工确认允许主机、方法和失败处理均已记录。
   - id: SQSP-S010
-    title: Unvalidated input influences filesystem write path
+    title: 未校验输入影响文件写入路径
     category: unsafe-path-input
     severity: MEDIUM
-    remediation: Resolve the target under an approved output directory and enforce containment before writing.
+    remediation: 将目标路径解析到批准的输出目录下，并在写入前执行规范化、目录包含关系和文件名白名单校验。
+    repair_scope: 输出路径构造
+    verification: 重新扫描后应不再命中 S010；补充 ../、绝对路径和符号链接逃逸的测试用例。
   - id: SQSP-S011
-    title: Dependency locking or vulnerability coverage incomplete
+    title: 依赖锁定或漏洞覆盖不完整
     category: dependency-coverage
     severity: MEDIUM
-    remediation: Pin dependency versions and commit a supported lock file; use a versioned vulnerability adapter.
+    remediation: 固定依赖精确版本并提交受支持的锁文件；需要漏洞结论时接入带版本记录的漏洞数据源。
+    repair_scope: 依赖清单与锁文件
+    verification: 重新扫描后应不再命中 S011；人工确认安装命令使用锁文件且漏洞库查询范围可审计。
   - id: SQSP-S012
-    title: Install hook or setup executes commands
+    title: 安装钩子或构建脚本会执行命令
     category: install-hook
     severity: MEDIUM
-    remediation: Remove installation-time execution or review a pinned, minimal installation procedure.
+    remediation: 删除安装期执行命令的钩子；如确有必要，改为最小化、固定版本且可审查的安装流程。
+    repair_scope: 安装与构建生命周期
+    verification: 重新扫描后应不再命中 S012；人工确认安装阶段不会修改宿主环境或执行未审查脚本。
   - id: SQSP-S013
-    title: High-impact action lacks confirmation
+    title: 高影响操作缺少用户确认
     category: high-impact-action
     severity: MEDIUM
-    remediation: Require explicit user confirmation and enforce approval in the trusted execution layer.
+    remediation: 在执行删除、覆盖、发送等高影响动作前要求明确用户确认，并由可信执行层强制校验确认状态。
+    repair_scope: 高影响操作审批
+    verification: 重新扫描后应不再命中 S013；补充“未确认时中止”的用例并人工确认执行层可强制拦截。
   - id: SQSP-S014
-    title: Broad requested permissions require human review
+    title: 请求的权限范围过宽
     category: excessive-permissions
     severity: MEDIUM
-    remediation: Narrow requested tools, paths and secret access to what the task actually needs.
+    remediation: 将工具、读写路径、网络主机和秘密访问收缩到任务必需的最小集合，删除通配符权限。
+    repair_scope: 权限声明
+    verification: 重新扫描后应不再命中 S014；人工比对权限声明、平台批准权限与实际功能需求。
   - id: SQSP-S015
-    title: External tool instructions lack failure handling
+    title: 外部工具说明缺少失败处理
     category: maintainability
     severity: LOW
-    remediation: Document required tool versions and concrete failure, timeout and recovery behavior.
+    remediation: 在对应工具步骤中写明所需版本、失败提示、超时阈值、重试次数和不可恢复时的回退动作。
+    repair_scope: 外部工具调用说明
+    verification: 重新扫描后应不再命中 S015；补充工具缺失、超时和失败的文档或评测用例。
   - id: SQSP-S016
-    title: Missing tests, license or version metadata
+    title: 缺少评测用例、许可证或版本元数据
     category: maintainability
     severity: INFO
-    remediation: Provide evaluation cases, a license and a declared version; these do not prove runtime correctness.
+    remediation: 补充 evals/cases.yaml、许可证和 metadata.version；同时为关键任务定义可观察断言，但不要把声明误当作运行成功。
+    repair_scope: 可维护性与评测声明
+    verification: 重新扫描后应不再命中 S016；确认每个新增评测用例均有明确预期结果。

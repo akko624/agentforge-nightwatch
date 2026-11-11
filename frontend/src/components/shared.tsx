@@ -42,7 +42,7 @@ export function FindingDetails({ finding }: { finding: Finding }) {
       { key: 'status', label: '审查状态', children: finding.status },
     ]} />
     <Typography.Text strong>脱敏证据（纯文本）</Typography.Text><pre className="evidence">{finding.evidence_excerpt || '无文本证据'}</pre>
-    <Typography.Paragraph><strong>整改建议：</strong>{finding.remediation}</Typography.Paragraph>
+    <Alert type="info" showIcon message="中文修复方案" description={finding.remediation || '未提供修复建议；请结合证据进行人工审查。'} />
     {finding.context_note && <Alert type="warning" showIcon message="可能存在上下文或误报边界" description={finding.context_note} />}
     <Typography.Text type="secondary" className="hash">Fingerprint: {finding.fingerprint}</Typography.Text>
   </div>;

@@ -1568,6 +1568,11 @@
             "type": "number",
             "title": "Coverage"
           },
+          "runtime_coverage": {
+            "type": "number",
+            "title": "Runtime Coverage",
+            "default": 0
+          },
           "static_subscore": {
             "anyOf": [
               {

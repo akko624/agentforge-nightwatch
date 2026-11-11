@@ -38,7 +38,7 @@
 
 扫描生命周期为 `QUEUED/RUNNING/COMPLETED/PARTIAL/FAILED`；每个阶段单独返回 `NOT_RUN/RUNNING/PASSED/FINDINGS/PARTIAL/ERROR/TIMEOUT/UNAVAILABLE` 和原因。动态始终显示默认不可用；请求未配置能力时门禁不会返回虚假的全面通过。
 
-完整质量分 `score` 保持 null，静态子分与覆盖单独展示。风险指数仅用于排序，不能证明安全；发布门禁优先级为 `BLOCK > INCOMPLETE > REVIEW > ALLOW`。比较会提示规则、策略、扫描器与阶段覆盖变化，不把静态差异解释为真实任务成功率变化。
+完整质量分 `score` 保持 null，静态子分与覆盖单独展示。`coverage` 是四个维度的静态可验证性检查权重：功能维度检查功能/正反向/边界用例与可观察断言，稳定性维度检查重复用例、时限、恢复、幂等和依赖失败约定。`runtime_coverage` 单独记录可信隔离 Runner 的真实观测覆盖；当前为 `0`。因此，静态检查完成不代表功能已成功执行或性能已测量。风险指数仅用于排序，不能证明安全；发布门禁优先级为 `BLOCK > INCOMPLETE > REVIEW > ALLOW`。比较会提示规则、策略、扫描器与阶段覆盖变化，不把静态差异解释为真实任务成功率变化。
 
 MVP 没有用户认证、人工审核或白名单修改 API。`owner_label` 是不可信标签，所有真实身份授权与审核流程留给后续阶段。
 

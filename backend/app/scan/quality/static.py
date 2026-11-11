@@ -1,15 +1,16 @@
-"""Deterministic documentation checks; never estimates actual task success.
+"""Deterministic, non-executing quality checks.
 
-Only the conformance and maintainability dimensions are measured here. Neither
-the completeness of prose nor the presence of eval fixtures proves that a host
-selected the Skill or completed a real task.
+Every quality dimension receives a static *verifiability* check so an author
+can improve the package before a trusted runner exists.  These checks inspect
+only declarations and documentation.  They never estimate real task success,
+stability, latency, or resource consumption.
 """
 
 import re
 
 from backend.app.scan.contracts import ScanContext
 
-RUNNER_VERSION = "static-quality-1.0"
+RUNNER_VERSION = "static-quality-1.1"
 
 
 def _check(check_id: str, passed: bool, category: str, evidence_ref: str, label: str) -> dict:
@@ -18,7 +19,8 @@ def _check(check_id: str, passed: bool, category: str, evidence_ref: str, label:
             "evidence_ref": evidence_ref, "label": label}
 
 
-def _measured_dimension(name: str, weight: float, checks: list[dict], reason: str) -> dict:
+def _measured_dimension(name: str, weight: float, checks: list[dict], reason: str,
+                        *, runtime_status: str = "NOT_APPLICABLE", runtime_reason: str | None = None) -> dict:
     numerator = sum(check["passed"] for check in checks)
     denominator = len(checks)
     return {"dimension": name, "weight": weight,
@@ -26,13 +28,8 @@ def _measured_dimension(name: str, weight: float, checks: list[dict], reason: st
             "score": round(100 * numerator / denominator, 2),
             "metric": "deterministic_checks_passed", "numerator": numerator, "denominator": denominator,
             "checks": checks, "reason": reason, "runner_version": RUNNER_VERSION,
-            "evidence_ref": "SKILL.md"}
-
-
-def _unmeasured_dimension(name: str, weight: float, metric: str, reason: str) -> dict:
-    return {"dimension": name, "weight": weight, "status": "NOT_RUN", "score": None,
-            "metric": metric, "numerator": None, "denominator": None, "checks": [],
-            "reason": reason, "runner_version": None, "evidence_ref": None}
+            "evidence_ref": "package declarations", "evidence_level": "STATIC_VERIFIABILITY",
+            "runtime_status": runtime_status, "runtime_reason": runtime_reason}
 
 
 def _has_assertions(case: dict) -> bool:
@@ -42,8 +39,31 @@ def _has_assertions(case: dict) -> bool:
                 or isinstance(expected.get("skill_selected"), bool))
 
 
+def _case_assertion_is_complete(case: dict) -> bool:
+    """Require a task case to state an observable result without executing it."""
+    expected = case.get("expected", {})
+    if not isinstance(expected, dict) or not _has_assertions(case):
+        return False
+    category = case.get("category")
+    if category == "trigger_negative":
+        return expected.get("skill_selected") is False
+    if category == "trigger_positive":
+        return expected.get("skill_selected") is True
+    return bool(expected.get("output_file") or expected.get("contains") or expected.get("forbidden_tool_calls"))
+
+
+def _has_boundary_case(cases: list[dict]) -> bool:
+    boundary = re.compile(r"\b(?:empty|missing|invalid|malformed|error|fail|timeout|limit|boundary)\b|为空|缺失|无效|异常|错误|失败|超时|边界|上限", re.I)
+    return any(boundary.search(" ".join(str(case.get(key, "")) for key in ("id", "name", "trigger_prompt")))
+               for case in cases)
+
+
+def _has_terms(text: str, expression: str) -> bool:
+    return re.search(expression, text, re.I) is not None
+
+
 def evaluate_static_quality(context: ScanContext) -> dict:
-    """Measure 40% of the fixed model and retain null for complete quality.
+    """Check all fixed dimensions statically and retain null for runtime quality.
 
     The caller must supply the ParsedSkill produced by the safe parser. Invalid
     mandatory frontmatter is rejected at ingestion; local reference issues may
@@ -102,21 +122,54 @@ def evaluate_static_quality(context: ScanContext) -> dict:
         _check("version", bool(metadata.get("version", "").strip()) if valid_metadata else False,
                "platform_recommendation", "SKILL.md#frontmatter", "An author-declared version label is present"),
     ]
+    cases = parsed.evals.get("cases", [])
+    functional_cases = [case for case in cases if case.get("category") == "functional"]
+    positive_cases = [case for case in cases if case.get("category") == "trigger_positive"]
+    negative_cases = [case for case in cases if case.get("category") == "trigger_negative"]
+    reliability_cases = [case for case in cases if case.get("category") == "reliability"]
+    task_cases = [case for case in cases if case.get("category") in {"functional", "trigger_positive", "trigger_negative"}]
+    correctness_checks = [
+        _check("functional_case", bool(functional_cases), "static_verifiability", "evals/cases.yaml",
+               "已声明至少一个功能用例"),
+        _check("positive_trigger_case", bool(positive_cases) or bool(functional_cases), "static_verifiability", "evals/cases.yaml",
+               "已声明正向触发或功能用例"),
+        _check("negative_trigger_case", any(case.get("expected", {}).get("skill_selected") is False for case in negative_cases),
+               "static_verifiability", "evals/cases.yaml", "已声明不应触发 Skill 的反向用例"),
+        _check("observable_task_assertions", bool(task_cases) and all(_case_assertion_is_complete(case) for case in task_cases),
+               "static_verifiability", "evals/cases.yaml", "每个任务用例都定义了可观察预期"),
+        _check("boundary_case", _has_boundary_case(cases), "static_verifiability", "evals/cases.yaml",
+               "已声明输入或失败边界用例"),
+    ]
+    reliability_checks = [
+        _check("repeated_reliability_case", any(case.get("repeat", 1) >= 2 for case in reliability_cases),
+               "static_verifiability", "evals/cases.yaml", "已声明至少一个重复执行的稳定性用例"),
+        _check("timeout_or_budget", _has_terms(body, r"\b(?:timeout|time\s*limit|budget|token(?:s)?\s*(?:limit|budget)|resource\s*limit)\b|超时|时限|时间限制|预算|令牌上限|资源上限"),
+               "static_verifiability", "SKILL.md", "已声明超时或资源预算边界"),
+        _check("retry_or_recovery", _has_terms(body, r"\b(?:retry|recovery|recover|fallback)\b|重试|恢复|降级|回退"),
+               "static_verifiability", "SKILL.md", "已声明重试、恢复或降级策略"),
+        _check("idempotency", _has_terms(body, r"\b(?:idempot(?:ent|ency)|repeatable|deterministic)\b|幂等|可重复|确定性"),
+               "static_verifiability", "SKILL.md", "已说明重复执行的一致性或幂等性"),
+        _check("dependency_failure_contract", _has_terms(body, r"\b(?:dependency|dependencies|tool|network|service)\b.{0,120}\b(?:error|fail|timeout|unavailable|retry)\b|(?:依赖|工具|网络|服务).{0,120}(?:失败|错误|超时|不可用|重试)"),
+               "static_verifiability", "SKILL.md", "已说明外部依赖失败时的处理"),
+    ]
+    runtime_unavailable = "未接入可信隔离 Runner：未执行上传代码，不能证明真实任务成功、稳定性、延迟或资源消耗。"
     dimensions = [
         _measured_dimension("conformance", 0.2, conformance_checks,
                             "Official field validation and package reference checks; optional SQSP recommendations are scored separately."),
         _measured_dimension("maintainability", 0.2, maintainability_checks,
                             "Deterministic documentation heuristics only; keywords and declared fixtures do not demonstrate usability or task success."),
-        _unmeasured_dimension("correctness", 0.4, "observed_host_task_outcomes",
-                              "No approved real host runner is configured; selection, task success and baseline benefit were not measured."),
-        _unmeasured_dimension("reliability", 0.2, "observed_repeated_run_efficiency",
-                              "No approved repeated host runs are available; stability, latency, token and resource efficiency were not measured."),
+        _measured_dimension("correctness", 0.4, correctness_checks,
+                            "静态可验证性检查：核对功能、触发、反向触发、断言与边界用例的声明；不代表功能已真实执行。",
+                            runtime_status="UNAVAILABLE", runtime_reason=runtime_unavailable),
+        _measured_dimension("reliability", 0.2, reliability_checks,
+                            "静态可验证性检查：核对重复用例、时限、恢复、幂等与依赖失败约定；不代表稳定性或效率已真实测量。",
+                            runtime_status="UNAVAILABLE", runtime_reason=runtime_unavailable),
     ]
     coverage = round(sum(dimension["weight"] for dimension in dimensions
                          if dimension["status"] in {"PASSED", "FINDINGS"}), 2)
-    static_subscore = round((dimensions[0]["score"] + dimensions[1]["score"]) / 2, 2)
-    return {"score": None, "coverage": coverage, "static_subscore": static_subscore,
+    static_subscore = round(sum(dimension["weight"] * dimension["score"] for dimension in dimensions), 2)
+    return {"score": None, "coverage": coverage, "runtime_coverage": 0.0, "static_subscore": static_subscore,
             "dimensions": dimensions,
-            "reasons": ["Full quality is unavailable: correctness and reliability have not been measured.",
-                        "Static subscore covers only the two static dimensions; it is not the complete weighted quality score.",
-                        "Documentation and test declarations were inspected without executing Skill code."]}
+            "reasons": ["四个维度均完成静态可验证性检查；这不是四个维度的真实运行时评测。",
+                        "完整质量分保持未评测：功能正确性、触发率、稳定性、延迟、令牌与资源效率均未在可信隔离环境中观测。",
+                        "所有检查只读取文档与评测声明，未执行、导入或调用上传 Skill 的代码。"]}

@@ -62,7 +62,12 @@ def scan(base: str, version_id: str, timeout: float) -> tuple[str, dict]:
             assert summary["stages"]["dynamic"]["status"] == "UNAVAILABLE", "Default sandbox must fail closed"
             report = request_json(base, f"/api/v1/scans/{scan_id}/report")
             assert report["quality"]["score"] is None
-            assert report["quality"]["coverage"] <= 0.4
+            assert report["quality"]["coverage"] == 1, "All four static verifiability dimensions must run"
+            assert report["quality"]["runtime_coverage"] == 0, "Static checks must not fabricate runtime evidence"
+            assert {item["dimension"] for item in report["quality"]["dimensions"]} == {
+                "conformance", "maintainability", "correctness", "reliability",
+            }
+            assert all(item.get("evidence_level") == "STATIC_VERIFIABILITY" for item in report["quality"]["dimensions"])
             assert report["provenance"]["ruleset_sha256"]
             assert report["provenance"]["policy_version"]
             return scan_id, report
@@ -88,6 +93,8 @@ def main() -> None:
     suspicious = reports["suspicious-skill"][1]
     assert not benign["security"]["findings"], "Benign fixture should not have security findings"
     assert len({item["category"] for item in suspicious["security"]["findings"]}) >= 4
+    repair = suspicious["security"]["findings"][0]["remediation"]
+    assert "修复位置：" in repair and "具体操作：" in repair and "复测方式：" in repair
     assert suspicious["decision"]["status"] == "BLOCK"
     parameters = urlencode({"left": reports["suspicious-skill"][0], "right": reports["suspicious-skill-v2"][0]})
     difference = request_json(args.base_url, f"/api/v1/compare?{parameters}")
@@ -98,7 +105,7 @@ def main() -> None:
     rejection = upload(args.base_url, malicious.getvalue(), "traversal.zip", expected=400)
     assert rejection["error"]["code"] == "INVALID_ARCHIVE"
     assert rejection["error"]["request_id"]
-    print("PASS: import -> independent Worker -> report -> version comparison; traversal rejected; score null; sandbox UNAVAILABLE")
+    print("PASS: import -> Worker -> 四维静态质量检查 -> 定位式中文修复建议 -> 版本比较；目录遍历被拒绝；score=null；sandbox=UNAVAILABLE")
 
 
 if __name__ == "__main__":

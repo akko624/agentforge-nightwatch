@@ -315,6 +315,10 @@ def test_all_findings_have_provenance_evidence_and_remediation():
         assert finding.engine_version == "0.1.0"
         assert finding.evidence_excerpt
         assert finding.remediation
+        assert "功能范围：" in finding.remediation
+        assert f"修复位置：{finding.file_path}:{finding.line_start}" in finding.remediation
+        assert "具体操作：" in finding.remediation
+        assert "复测方式：" in finding.remediation
         assert finding.line_start >= 1
         assert finding.line_end >= finding.line_start
 
@@ -327,3 +331,10 @@ def test_excessive_candidates_are_bounded_and_partial(monkeypatch):
     assert result.status == "PARTIAL"
     assert result.coverage["finding_limit_reached"] is True
     assert len(result.findings) <= 2
+
+
+def test_documentation_remediation_points_to_the_tool_instruction_line():
+    result = analyze(body="# Setup\nUse npm install for the required tool.\n")
+    finding = by_rule(result, "S015")[0]
+    assert finding.line_start == 9  # Complete fixture frontmatter plus the Markdown heading.
+    assert "修复位置：SKILL.md:9" in finding.remediation

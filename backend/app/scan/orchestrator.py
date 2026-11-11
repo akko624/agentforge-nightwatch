@@ -110,8 +110,10 @@ def _analyze(context: ScanContext, modes: list[str], policy: dict) -> tuple[dict
             else:
                 from backend.app.scan.quality import evaluate_static_quality
                 quality = evaluate_static_quality(context)
-                result = AnalysisResult(status="PARTIAL", reason="Only conformance and maintainability heuristics evaluated; real correctness and reliability NOT_RUN",
-                                        coverage={"quality_coverage": quality["coverage"], "dimensions_completed": ["conformance", "maintainability"]})
+                result = AnalysisResult(status="PARTIAL", reason="四个维度已完成静态可验证性检查；真实正确性、稳定性与效率仍未在可信隔离 Runner 中执行。",
+                                        coverage={"quality_coverage": quality["coverage"], "runtime_coverage": quality["runtime_coverage"],
+                                                  "dimensions_completed": [item["dimension"] for item in quality["dimensions"]],
+                                                  "runtime_evidence": "UNAVAILABLE"})
             result.duration_ms = round((time.monotonic() - start) * 1000)
         except (TimeoutError, RecursionError):
             result = AnalysisResult(status="TIMEOUT", reason="Analyzer exceeded safe processing limits")
