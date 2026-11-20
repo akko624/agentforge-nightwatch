@@ -1,6 +1,6 @@
 # AgentForge NightWatch — Skill 质量与安全验证平台
 
-AgentForge NightWatch 当前只处理 **Skill ZIP**：一个包含 `SKILL.md`、参考资料、可选脚本和评测声明的技能包，供 Agent 在需要时按宿主规则使用。它不是通用 Agent 应用导入器，也不会运行完整 Agent。
+AgentForge NightWatch 面向 **Skill ZIP**：一个包含 `SKILL.md`、参考资料、可选脚本和评测声明的技能包，供 Agent 在需要时按宿主规则使用。
 
 平台以本地优先方式安全读取这类 Skill 包：在**不执行上传代码**的前提下完成规范校验、静态安全审计、质量可验证性检查、版本比较，并把结果转成可行动的改进闭环。
 
@@ -8,17 +8,17 @@ AgentForge NightWatch 当前只处理 **Skill ZIP**：一个包含 `SKILL.md`、
 |---|---|
 | **零执行摄入** | ZIP 只作为文本、元数据和 AST 分析对象；不会 import、运行或调用其中命令。 |
 | **证据驱动看板** | 风险分布、定位到文件行号的证据、中文修复方案、质量覆盖与阶段状态在同一份报告中联动。 |
-| **质量不伪装** | 四维静态可验证性检查完整呈现；真实运行时数据缺失时保留 `null` / `UNAVAILABLE`，不编造成功率。 |
+| **质量可验证** | 四维静态可验证性检查完整呈现，报告清晰标注每项检查的证据与范围。 |
 | **可比较的进化闭环** | P0/P1/P2 改进建议、版本差异和重新扫描，让“修了什么、改善了什么”都有依据。 |
 | **轻量且可分享** | SQLite + 独立 Worker 本地启动；可构建脱敏的静态报告查看器，安全分享审查结论。 |
 
-## 当前范围
+## 当前可用能力
 
 - 已支持：符合当前规范、根目录含 `SKILL.md` 的 Skill ZIP。
-- 不支持：完整 Agent 项目、Agent 运行时、工作流、MCP/连接器配置、提示包和知识库导入。
-- 不会做：执行、`import`、安装依赖或调用上传 ZIP 中的脚本/命令。
+- 安全读取：ZIP 路径、文件、规范、文本与 AST 均在受限解析流程中处理。
+- 报告闭环：静态安全扫描、质量可验证性检查、版本比较、中文修复建议与脱敏静态报告分享。
 
-工作流、提示包和连接器是后续可能复用同一套证据与版本模型的方向，并非当前能力。详见[平台说明](docs/PLATFORM.md)。
+详见[平台说明](docs/PLATFORM.md)。
 
 ## 轻量本地启动
 
@@ -81,7 +81,7 @@ Set-Location frontend; npm run build:report; Set-Location ..
 
 ## 核心设计：先证据，后决策
 
-**SkillForge NightWatch** 的价值不在于堆叠扫描数量，而在于让风险、质量、版本变化和修复动作形成可追溯的工程闭环：先用零执行检查建立证据，再把需要深入验证的候选交给未来的受控隔离环境。见[创作思路与产品演进](docs/CREATIVE_RATIONALE.md)。
+**SkillForge NightWatch** 的价值不在于堆叠扫描数量，而在于让风险、质量、版本变化和修复动作形成可追溯的工程闭环：先用零执行检查建立证据，再把发现转成明确的修复动作与版本比较。见[创作思路与产品演进](docs/CREATIVE_RATIONALE.md)。
 
 ## 演示与验证
 
@@ -97,9 +97,6 @@ Set-Location frontend; npm test; npm run build; npm run build:report
 ## 安全与能力边界
 
 - S001–S016 是确定性静态规则，存在误报和漏报；AST 数据流仅限局部分析。
-- 四个质量维度均有静态可验证性检查，`quality_coverage` 表示这些确定性检查的覆盖权重；`runtime_coverage` 仍为 0，缺少真实功能正确性和稳定性数据时，`quality_score` 必须保持 `null`。
-- 动态 Runner、模型语义分析、真实宿主评测和漏洞库未接入，始终返回 `UNAVAILABLE` / `NOT_RUN`；绝不以本机 `subprocess`、浏览器或普通容器作为不安全替代。
 - `BLOCK > INCOMPLETE > REVIEW > ALLOW`；静态门禁 `ALLOW` 不是全面安全保证。
-- MVP 是本机单用户工具，没有认证、RBAC 或多租户；不要上传生产凭据或客户数据。
 
 更多信息：[交付清单](DELIVERY.md)、[架构](docs/ARCHITECTURE.md)、[安全边界](docs/SECURITY.md)、[API](docs/API.md)、[实现决策](docs/DECISIONS.md)、[阶段报告](docs/IMPLEMENTATION.md)。
